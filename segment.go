@@ -41,8 +41,13 @@ func (s *segmenterImpl) Segment(ctx context.Context, params *segmentParams) segm
 	}
 	if params != nil {
 		seg.Collection = params.Collection
-		seg.Operation = params.Operation
 		seg.ParameterizedQuery = params.Query
+		if op := params.Operation; op != "" {
+			seg.Operation = params.Operation
+		} else if params.Query != "" {
+			q := parseQuery(params.Query)
+			seg.Operation = q.Operation
+		}
 		if n := len(params.Args); n > 0 {
 			seg.QueryParameters = make(map[string]interface{}, n)
 			for i, arg := range params.Args {
