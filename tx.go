@@ -2,44 +2,34 @@ package nrsql
 
 import (
 	"context"
-	"database/sql"
-
-	"github.com/izumin5210/isql"
+	"database/sql/driver"
 )
 
-type txWrapper struct {
-	original *sql.Tx
-	isql.Queryer
-	isql.Execer
-
-	config *Config
+type nrTx struct {
+	original driver.Tx
+	ctx      context.Context
+	segmenter
 }
 
-func wrapTx(tx *sql.Tx, cfg *Config) isql.Tx {
-	return &txWrapper{
-		original: tx,
-		Queryer:  wrapQueryer(tx, cfg),
-		Execer:   wrapExecer(tx, cfg),
-		config:   cfg,
+func wrapTx(tx driver.Tx, ctx context.Context, s segmenter) driver.Tx {
+	wt := &nrTx{
+		original:  tx,
+		ctx:       ctx,
+		segmenter: s,
 	}
+	return wt
 }
 
-func (w *txWrapper) StmtContext(ctx context.Context, istmt isql.Stmt) isql.Stmt {
-	var q *query
-	if stmt, ok := istmt.(Stmt); ok {
-		q = stmt.parsedQuery()
-	}
-	return wrapStmt(w.original.StmtContext(ctx, istmt.Stmt()), w.config, q)
+func (t *nrTx) Commit() error {
+	seg := t.Segment(t.ctx, &segmentParams{Operation: "COMMIT"})
+	defer seg.End()
+
+	return t.original.Commit()
 }
 
-func (w *txWrapper) Commit() error {
-	return w.original.Commit()
-}
+func (t *nrTx) Rollback() error {
+	seg := t.Segment(t.ctx, &segmentParams{Operation: "ROLLBACK"})
+	defer seg.End()
 
-func (w *txWrapper) Rollback() error {
-	return w.original.Rollback()
-}
-
-func (w *txWrapper) Tx() *sql.Tx {
-	return w.original
+	return t.original.Rollback()
 }

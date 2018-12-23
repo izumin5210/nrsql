@@ -2,6 +2,7 @@ package nrsql
 
 import (
 	"strings"
+	"unicode"
 )
 
 type query struct {
@@ -10,8 +11,10 @@ type query struct {
 	Raw       string
 }
 
-func parseQuery(queryStr string) *query {
-	q := &query{Raw: queryStr}
-	q.Operation = strings.ToUpper(strings.Split(queryStr, " ")[0])
+func parseQuery(s string) *query {
+	q := &query{Raw: s}
+	s = strings.TrimSpace(s)
+	i := strings.IndexFunc(s, unicode.IsSpace)
+	q.Operation = strings.ToUpper(s[:i])
 	return q
 }
