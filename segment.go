@@ -5,7 +5,7 @@ import (
 	"database/sql/driver"
 	"strconv"
 
-	newrelic "github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 func newSegmenter(cfg *Config) segmenter {
@@ -23,7 +23,7 @@ type segmenterImpl struct {
 }
 
 type segment interface {
-	End() error
+	End()
 }
 
 func (s *segmenterImpl) Segment(ctx context.Context, params *segmentParams) segment {
@@ -78,4 +78,4 @@ type segmentParams struct {
 
 type fakeSegment struct{}
 
-func (*fakeSegment) End() error { return nil }
+func (*fakeSegment) End() {}
