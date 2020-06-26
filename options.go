@@ -1,6 +1,6 @@
 package nrsql
 
-import newrelic "github.com/newrelic/go-agent"
+import "github.com/newrelic/go-agent/v3/newrelic"
 
 // Config contains metadata to send to New Relic.
 type Config struct {
